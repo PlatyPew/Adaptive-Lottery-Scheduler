@@ -1,6 +1,8 @@
 from collections import deque
 from random import randint
 
+import sys
+
 
 # deleting the nth item in the queue
 def delete_nth(d: deque, n):
@@ -35,8 +37,10 @@ class Process():
 # global queue
 q = deque()
 
-filename = input("Enter filename: ")
-f = open(filename, "r")
+if len(sys.argv) != 2:
+    sys.exit(1)
+
+f = open(sys.argv[1], "r")
 # f = open("input4.txt", "r")
 
 # Global reference to all processes in input file
