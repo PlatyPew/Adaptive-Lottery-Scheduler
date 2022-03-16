@@ -67,6 +67,7 @@ for p in processes:
 
 current_time = 0
 
+# while there is still process to run in the queue
 while (len(q) != 0):
 
     avg_burst_time = 0
@@ -87,6 +88,7 @@ while (len(q) != 0):
             process.isShortJob = True
         else:
             process.tickets = 1
+            process.isShortJob = False
 
     # calculating max tickets
     for process in q:
@@ -102,10 +104,12 @@ while (len(q) != 0):
             winner = i
             break
 
+    # checking for each second
     for sec in range(1, time_slice + 1):
         q[winner].r_b_time -= 1
         current_time += 1
 
+        # increasing the waiting time for all processes that is not selected to run
         for p in q:
             if p is not q[winner]:
                 p.wait_time += 1
@@ -113,9 +117,17 @@ while (len(q) != 0):
         # check if new process arrived
         is_new_process_arrived = False
         for i in range(index_ptr, len(processes)):
+
+            # if new process arrived
             if current_time >= processes[i].arrival_time:
+
+                # update new process waiting time
                 processes[i].wait_time = current_time - processes[i].arrival_time
+
+                # add arrived process to queue
                 q.append(processes[i])
+
+                # increment index pointer reference
                 index_ptr += 1
                 is_new_process_arrived = True
 
