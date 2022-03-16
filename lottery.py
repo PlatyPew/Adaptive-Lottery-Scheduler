@@ -25,11 +25,11 @@ class Process():
 
     def __str__(self):
         return f"P_Num: {self.process_number}\n\
-                A_Time: {self.arrival_time}\n\
-                B_Time: {self.burst_time}\n\
-                R_B_Time: {self.r_b_time}\n\
-                W_Time: {self.wait_time}\n\
-                TA_Time: {self.turn_around_time}\n\n"
+    A_Time: {self.arrival_time}\n\
+    B_Time: {self.burst_time}\n\
+    R_B_Time: {self.r_b_time}\n\
+    W_Time: {self.wait_time}\n\
+    TA_Time: {self.turn_around_time}\n\n"
 
 
 # global queue
@@ -37,7 +37,7 @@ q = deque()
 
 filename = input("Enter filename: ")
 f = open(filename, "r")
-# f = open("input3.txt", "r")
+# f = open("input4.txt", "r")
 
 # Global reference to all processes in input file
 processes = []
@@ -105,7 +105,7 @@ while (len(q) != 0):
             break
 
     # checking for each second
-    for sec in range(1, time_slice + 1):
+    for sec in range(time_slice):
         q[winner].r_b_time -= 1
         current_time += 1
 
@@ -134,10 +134,28 @@ while (len(q) != 0):
         # if process finished running
         if q[winner].r_b_time == 0:
             q[winner].exit_time = current_time
+            q[winner].turn_around_time = current_time - q[winner].arrival_time
+
+            # print(q[winner])
+
             delete_nth(q, winner)
             break
 
         if (is_new_process_arrived):
+            break
+
+    # guard against edge case: when all processes are completed in queue
+    # but there's still processes waiting to arrive for completion in put
+    # e.g. P1 arrives at time 1 with b_time 1 P2 arrives at time 10 with b_time 1
+
+    # if there's no more processes in the queue
+    if (len(q) == 0):
+
+        # check for remaining processes
+        for i in range(index_ptr, len(processes)):
+            current_time = processes[i].arrival_time
+            index_ptr += 1
+            q.append(processes[i])
             break
 
 avg_TAT = 0
@@ -145,7 +163,7 @@ avg_WT = 0
 max_TAT = -1
 max_WT = -1
 for p in processes:
-    process_TAT = p.burst_time + p.wait_time
+    process_TAT = p.exit_time - p.arrival_time
     avg_TAT += process_TAT
     avg_WT += (p.wait_time)
     if process_TAT > max_TAT:
