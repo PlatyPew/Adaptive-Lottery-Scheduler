@@ -79,6 +79,25 @@ process* fileParse(FILE* fp) {
 }
 
 /**
+ * sortProcesses(): insertion sort processes by arrival time
+ * @processes: array of processes
+ *
+ */
+void sortProcesses(process* processes, size_t length) {
+    // Does insertion sort
+    for (int checkingIndex = 1; checkingIndex < length; checkingIndex++) {
+        for (int count = checkingIndex; count > 0; count--) {
+            if (processes[count].arrivalTime < processes[count - 1].arrivalTime) {
+                // Swap values
+                process tmp = processes[count];
+                processes[count] = processes[count - 1];
+                processes[count - 1] = tmp;
+            }
+        }
+    }
+}
+
+/**
  * getLength(): returns number of processes
  * @processes: array of processes
  *
@@ -119,7 +138,10 @@ int main(int argc, char** argv) {
     fclose(fp);
     size_t totalProcesses = getLength(processes);
 
+    sortProcesses(processes, totalProcesses);
     printProcesses(processes, totalProcesses);
+
+    free(processes);
 
     return 0;
 }
