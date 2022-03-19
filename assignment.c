@@ -78,6 +78,18 @@ process* fileParse(FILE* fp) {
     return processes;
 }
 
+void printProcesses(process* processes) {
+    puts("PNum\tAT\tBT\tRT\tWT\tET\tTAT\tTickets\tShort");
+
+    process* p;
+    int i = 0;
+    while ((p = processes + i++)->processNum != -1) {
+        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", p->processNum, p->arrivalTime, p->burstTime,
+               p->remainingTime, p->waitTime, p->exitTime, p->turnAroundTime, p->tickets,
+               p->shortJob);
+    }
+}
+
 int main(int argc, char** argv) {
     if (argc != 2)
         return 1;
@@ -88,6 +100,8 @@ int main(int argc, char** argv) {
 
     process* processes = fileParse(fp);
     fclose(fp);
+
+    printProcesses(processes);
 
     return 0;
 }
