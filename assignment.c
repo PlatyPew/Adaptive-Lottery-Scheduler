@@ -31,6 +31,12 @@ int mathCeil(float num) {
     return n + 1;
 }
 
+/**
+ * fileParse(): parses file and stores data into a process struct
+ * @fp: file pointer of file to be parsed
+ *
+ * Return: pointer of processes
+ */
 process* fileParse(FILE* fp) {
     process* processes = (process*)malloc(sizeof(process));
     int processesCounter = 0;
