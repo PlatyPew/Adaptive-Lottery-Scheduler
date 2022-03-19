@@ -4,6 +4,10 @@
 
 #define LINE_LENGTH 512 // Max numer of bytes per line
 
+// Tickets allocated based on long or short job
+#define LONG_JOB_TICKETS = 1
+#define SHORT_JOB_TICKETS = 10
+
 typedef struct {
     int processNum;
     int arrivalTime;
@@ -15,6 +19,11 @@ typedef struct {
     int turnAroundTime;
     int tickets;  // Lottery tickets
     int shortJob; // Check if job is long or short
+} processAttr;
+
+typedef struct process {
+    processAttr* pa;
+    struct process* next;
 } process;
 
 /**
@@ -53,7 +62,9 @@ process* fileParse(FILE* fp) {
             charCounter = 0;
 
             // Append to all processes
-            process* p = processes + processesCounter;
+            (processes + processesCounter)->pa = (processAttr*)malloc(sizeof(processAttr));
+            processAttr* p = (processes + processesCounter)->pa;
+
             p->processNum = processesCounter;
             // Split by space and ceiling the numbers
             p->arrivalTime = mathCeil(atof(strtok(line, " ")));
@@ -68,12 +79,15 @@ process* fileParse(FILE* fp) {
             p->tickets = 0;
             p->shortJob = 0;
 
+            (processes + processesCounter)->next = NULL;
+
             // Allocate memory for the next process
             processes = (process*)realloc(processes, sizeof(process) * (++processesCounter + 1));
         }
     }
 
-    (processes + processesCounter)->processNum = -1;
+    (processes + processesCounter)->pa = (processAttr*)malloc(sizeof(processAttr));
+    (processes + processesCounter)->pa->processNum = -1;
 
     return processes;
 }
@@ -87,7 +101,7 @@ void sortProcesses(process* processes, size_t length) {
     // Does insertion sort
     for (int checkingIndex = 1; checkingIndex < length; checkingIndex++) {
         for (int count = checkingIndex; count > 0; count--) {
-            if (processes[count].arrivalTime < processes[count - 1].arrivalTime) {
+            if ((processes + count)->pa->arrivalTime < (processes + count - 1)->pa->arrivalTime) {
                 // Swap values
                 process tmp = processes[count];
                 processes[count] = processes[count - 1];
@@ -105,7 +119,7 @@ void sortProcesses(process* processes, size_t length) {
  */
 size_t getLength(process* processes) {
     size_t length = 0;
-    while (processes[length].processNum != -1)
+    while ((processes + length)->pa->processNum != -1)
         length++;
 
     return length;
@@ -119,7 +133,7 @@ void printProcesses(process* processes, size_t length) {
     puts("PNum\tAT\tBT\tRT\tWT\tET\tTAT\tTickets\tShort");
 
     for (int i = 0; i < length; i++) {
-        process* p = processes + i;
+        processAttr* p = (processes + i)->pa;
         printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", p->processNum, p->arrivalTime, p->burstTime,
                p->remainingTime, p->waitTime, p->exitTime, p->turnAroundTime, p->tickets,
                p->shortJob);
