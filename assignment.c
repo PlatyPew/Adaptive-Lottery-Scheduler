@@ -35,11 +35,11 @@ int mathCeil(float num) {
  * fileParse(): parses file and stores data into a process struct
  * @fp: file pointer of file to be parsed
  *
- * Return: pointer of processes
+ * Return: array of processes
  */
 process* fileParse(FILE* fp) {
+    size_t processesCounter = 0;
     process* processes = (process*)malloc(sizeof(process));
-    int processesCounter = 0;
 
     // Read file until EOF
     char ch;
@@ -69,9 +69,11 @@ process* fileParse(FILE* fp) {
             p->shortJob = 0;
 
             // Allocate memory for the next process
-            processes = (process*)realloc(processes, sizeof(process) * (processesCounter++));
+            processes = (process*)realloc(processes, sizeof(process) * (++processesCounter + 1));
         }
     }
+
+    (processes + processesCounter)->processNum = -1;
 
     return processes;
 }
