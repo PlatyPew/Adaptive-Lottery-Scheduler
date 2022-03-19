@@ -1,0 +1,85 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define LINE_LENGTH 512 // Max numer of bytes per line
+
+typedef struct {
+    int processNum;
+    int arrivalTime;
+    int burstTime;
+    int remainingTime; // Remaining time process has left to run
+
+    int waitTime; // Time since last execution
+    int exitTime;
+    int turnAroundTime;
+    int tickets;  // Lottery tickets
+    int shortJob; // Check if job is long or short
+} process;
+
+/**
+ * mathCeil(): returns the ceiling of a float
+ * @num: the float to be ceiled
+ *
+ * Return: the ceiling of the float
+ */
+int mathCeil(float num) {
+    int n = (int)num;
+    if (n == num)
+        return n;
+
+    return n + 1;
+}
+
+process* fileParse(FILE* fp) {
+    process* processes = (process*)malloc(sizeof(process));
+    int processesCounter = 0;
+
+    // Read file until EOF
+    char ch;
+    int charCounter = 0;
+    while ((ch = fgetc(fp)) != EOF) {
+        char line[LINE_LENGTH];
+        line[charCounter++] = ch; // Append character to line
+
+        if (ch == '\n') {
+            *(line + charCounter - 2) = '\0'; // Strip \r\n
+            charCounter = 0;
+
+            // Append to all processes
+            process* p = processes + processesCounter;
+            p->processNum = processesCounter;
+            // Split by space and ceiling the numbers
+            p->arrivalTime = mathCeil(atof(strtok(line, " ")));
+            p->burstTime = mathCeil(atof(strtok(NULL, " ")));
+
+            p->remainingTime = p->burstTime; // Remaining time is burst time
+
+            // Setting the remaining attributes to 0
+            p->waitTime = 0;
+            p->exitTime = 0;
+            p->turnAroundTime = 0;
+            p->tickets = 0;
+            p->shortJob = 0;
+
+            // Allocate memory for the next process
+            processes = (process*)realloc(processes, sizeof(process) * (processesCounter++));
+        }
+    }
+
+    return processes;
+}
+
+int main(int argc, char** argv) {
+    if (argc != 2)
+        return 1;
+
+    FILE* fp = fopen(argv[1], "r");
+    if (fp == NULL) // Check if file can be opened
+        return 1;
+
+    process* processes = fileParse(fp);
+    fclose(fp);
+
+    return 0;
+}
