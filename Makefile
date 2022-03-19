@@ -1,8 +1,9 @@
 CC = gcc
+CFLAGS = -Wall
 PROGRAM = assignment
 
 all:
-	$(CC) -o $(PROGRAM) $(PROGRAM).c
+	$(CC) $(CFLAGS) -o $(PROGRAM) $(PROGRAM).c
 
 clean:
 	rm $(PROGRAM)
