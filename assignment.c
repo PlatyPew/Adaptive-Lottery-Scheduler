@@ -102,8 +102,8 @@ process* fileParse(FILE* fp) {
  */
 void sortProcesses(process* processes, size_t length) {
     // Does insertion sort
-    for (int checkingIndex = 1; checkingIndex < length; checkingIndex++) {
-        for (int count = checkingIndex; count > 0; count--) {
+    for (size_t checkingIndex = 1; checkingIndex < length; checkingIndex++) {
+        for (size_t count = checkingIndex; count > 0; count--) {
             if ((processes + count)->pa->arrivalTime < (processes + count - 1)->pa->arrivalTime) {
                 // Swap values
                 process tmp = processes[count];
@@ -159,7 +159,7 @@ size_t getLengthQueue(process* queue) {
 void printProcesses(process* processes, size_t length) {
     puts("PNum\tAT\tBT\tRT\tWT\tET\tTAT\tTickets\tShort");
 
-    for (int i = 0; i < length; i++) {
+    for (size_t i = 0; i < length; i++) {
         processAttr* p = (processes + i)->pa;
         printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", p->processNum, p->arrivalTime, p->burstTime,
                p->remainingTime, p->waitTime, p->exitTime, p->turnAroundTime, p->tickets,
@@ -314,7 +314,7 @@ void deleteProcess(process** queue, process* p) {
  */
 void freeProcessors(process* processes, size_t length) {
     // Include additional memory added as a form of null terminated array
-    for (int i = 0; i < length + 1; i++) {
+    for (size_t i = 0; i < length + 1; i++) {
         free((processes + i)->pa);
     }
     free(processes);
@@ -343,7 +343,7 @@ int main(int argc, char** argv) {
 
     // Add newly arrived processes to queue
     process* prev = processes;
-    for (int i = 0; i < totalProcesses; i++) {
+    for (size_t i = 0; i < totalProcesses; i++) {
         process* curr = processes + i;
         // If processes has arrived and not first
         if (i != 0 && curr->pa->arrivalTime == processes->pa->arrivalTime) {
@@ -378,7 +378,7 @@ int main(int argc, char** argv) {
             process* tmpPtr = indexPtr; // Temporary index pointer
             int newProcessArrived = 0;
             process* prev = indexPtr - 1;
-            for (int i = 0; i < getLengthProcesses(indexPtr); i++) {
+            for (size_t i = 0; i < getLengthProcesses(indexPtr); i++) {
                 // If new process arrived
                 processAttr* p = (indexPtr + i)->pa;
                 if (timeElapsed >= p->arrivalTime) {
@@ -422,7 +422,7 @@ int main(int argc, char** argv) {
             // Check for remaining processes
             process* prev = indexPtr - 1;
             process* tmpPtr = indexPtr;
-            for (int i = 0; i < getLengthProcesses(indexPtr); i++) {
+            for (size_t i = 0; i < getLengthProcesses(indexPtr); i++) {
                 timeElapsed = (indexPtr + i)->pa->arrivalTime;
                 tmpPtr++;
                 prev = enqueue(indexPtr + i, prev);
@@ -437,7 +437,7 @@ int main(int argc, char** argv) {
     int maxTAT = -1;
     int maxWT = -1;
 
-    for (int i = 0; i < totalProcesses; i++) {
+    for (size_t i = 0; i < totalProcesses; i++) {
         processAttr* p = (processes + i)->pa;
         avgTAT += p->turnAroundTime;
         avgWT += p->waitTime;
