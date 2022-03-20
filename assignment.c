@@ -370,8 +370,7 @@ int main(int argc, char** argv) {
                     p->waitTime = timeElapsed - p->arrivalTime;
 
                     // Add arrived process to queue
-                    process* curr = indexPtr + i;
-                    prev = enqueue(curr, prev);
+                    prev = enqueue(indexPtr + i, prev);
 
                     // Increment index pointer reference
                     tmpPtr++;
@@ -394,6 +393,26 @@ int main(int argc, char** argv) {
             // Stop if new process arrives
             if (newProcessArrived)
                 break;
+        }
+
+        /*
+         * Guard against edge case: when all processes are completed in queue
+         * but there's still processes that have yet to arrive
+         * E.g. P1 arrives at time 1 with burst time 1 P2 arrives at time 10 with burst time 1
+         */
+
+        // If there's no more processes in the queue
+        if (!getLengthQueue(queue)) {
+            // Check for remaining processes
+            process* prev = indexPtr - 1;
+            process* tmpPtr = indexPtr;
+            for (int i = 0; i < getLengthProcesses(indexPtr); i++) {
+                timeElapsed = (indexPtr + i)->pa->arrivalTime;
+                tmpPtr++;
+                prev = enqueue(indexPtr + i, prev);
+                break;
+            }
+            indexPtr = tmpPtr;
         }
     }
 
