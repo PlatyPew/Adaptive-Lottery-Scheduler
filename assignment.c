@@ -171,7 +171,7 @@ void printProcesses(process* processes, size_t length) {
 void printQueue(process* queueHead) {
     puts("PNum\tAT\tBT\tRT\tWT\tET\tTAT\tTickets\tShort");
 
-    do {
+    while (queueHead != NULL) {
         processAttr* pa = queueHead->pa;
 
         printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", pa->processNum, pa->arrivalTime,
@@ -179,7 +179,7 @@ void printQueue(process* queueHead) {
                pa->tickets, pa->shortJob);
 
         queueHead = queueHead->next;
-    } while (queueHead != NULL);
+    }
 }
 
 /**
@@ -235,6 +235,7 @@ int getTotalTickets(process* queue) {
         return 0;
 
     processAttr* p = queue->pa;
+    p->tickets += p->waitTime; // Calculating max tickets
 
     return p->tickets + getTotalTickets(queue->next);
 }
