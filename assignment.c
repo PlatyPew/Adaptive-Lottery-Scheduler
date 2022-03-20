@@ -240,6 +240,12 @@ int getTotalTickets(process* queue) {
     return p->tickets + getTotalTickets(queue->next);
 }
 
+/**
+ * getWinner(): returns the pointer to the winning process
+ * @queue: head of the queue
+ *
+ * Return: pointer to winning process
+ */
 process* getWinner(process* queue) {
     // Select random ticket between 1 and all tickets inclusively
     int winningTicket = rand() % getTotalTickets(queue) + 1;
