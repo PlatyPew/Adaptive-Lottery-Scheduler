@@ -5,8 +5,8 @@
 #define LINE_LENGTH 512 // Max numer of bytes per line
 
 // Tickets allocated based on long or short job
-#define LONG_JOB_TICKETS = 1
-#define SHORT_JOB_TICKETS = 10
+#define LONG_JOB_TICKETS 1
+#define SHORT_JOB_TICKETS 10
 
 typedef struct {
     int processNum;
@@ -117,10 +117,20 @@ void sortProcesses(process* processes, size_t length) {
  *
  * Return: number of processes
  */
-size_t getLength(process* processes) {
+size_t getLengthProcesses(process* processes) {
     size_t length = 0;
     while ((processes + length)->pa->processNum != -1)
         length++;
+
+    return length;
+}
+
+size_t getLengthQueue(process* queueHead) {
+    size_t length = 0;
+    while (queueHead != NULL) {
+        length++;
+        queueHead = queueHead->next;
+    }
 
     return length;
 }
@@ -140,6 +150,64 @@ void printProcesses(process* processes, size_t length) {
     }
 }
 
+/**
+ * printQueue(): prints all processes in the queue
+ * @queueHead: the head of the queue
+ */
+void printQueue(process* queueHead) {
+    puts("PNum\tAT\tBT\tRT\tWT\tET\tTAT\tTickets\tShort");
+
+    do {
+        processAttr* pa = queueHead->pa;
+
+        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", pa->processNum, pa->arrivalTime,
+               pa->burstTime, pa->remainingTime, pa->waitTime, pa->exitTime, pa->turnAroundTime,
+               pa->tickets, pa->shortJob);
+
+        queueHead = queueHead->next;
+    } while (queueHead != NULL);
+}
+
+/**
+ * getAvgRemainingTime(): returns the average of all remaining time of processes in the queue
+ * @queue: head of the queue
+ *
+ * Return: average remaining time
+ */
+int getAvgRemainingTime(process* queue) {
+    int avgBurstTime = 0;
+    size_t length = getLengthQueue(queue);
+    do {
+        processAttr* p = queue->pa;
+        avgBurstTime += p->remainingTime;
+
+        queue = queue->next; // Move to next process in queue
+    } while (queue != NULL);
+
+    return avgBurstTime / length;
+}
+
+/**
+ * allocateTickets(): allocate tickets based on long or short job
+ * @queue: head of the queue
+ * @avgBurstTime: average to compare to
+ */
+void allocateTickets(process* queue, int avgBurstTime) {
+    do {
+        processAttr* p = queue->pa;
+        // Short job if remaining burst time <= average remaining burst time
+        if (p->remainingTime <= avgBurstTime) {
+            p->tickets = SHORT_JOB_TICKETS;
+            p->shortJob = 1;
+        } else { // Else long job
+            p->tickets = LONG_JOB_TICKETS;
+            p->shortJob = 0;
+        }
+
+        queue = queue->next; // Move to next process in queue
+    } while (queue != NULL);
+}
+
 int main(int argc, char** argv) {
     if (argc != 2)
         return 1;
@@ -150,12 +218,42 @@ int main(int argc, char** argv) {
 
     process* processes = fileParse(fp);
     fclose(fp);
-    size_t totalProcesses = getLength(processes);
+    size_t totalProcesses = getLengthProcesses(processes);
 
     sortProcesses(processes, totalProcesses);
-    printProcesses(processes, totalProcesses);
 
-    free(processes);
+    // Index pointer used to track when to add newly arrived processes
+    process* indexPtr = processes;
+    process* queue = processes;
+
+    // Add newly arrived processes to queue
+    process* prev = processes;
+    for (int i = 0; i < totalProcesses; i++) {
+        process* curr = (processes + i);
+        // If processes has arrived
+        if (i != 0 && curr->pa->arrivalTime == processes->pa->arrivalTime) {
+            prev->next = curr;
+            prev = curr;
+            indexPtr++; // Tracks last item on the queue
+        }
+    }
+
+    int timeElapsed = 0;
+
+    // While there are still processes to run in the queue
+    while (getLengthQueue(queue) != 0) {
+        int timeSlice = 0;
+        int ticketInSystem = 0;
+
+        // Determining average burst time
+        int avgBurstTime = getAvgRemainingTime(queue);
+        timeSlice = avgBurstTime;
+
+        // Allocating tickets
+        allocateTickets(queue, avgBurstTime);
+
+        break; // TODO: Remove
+    }
 
     return 0;
 }
