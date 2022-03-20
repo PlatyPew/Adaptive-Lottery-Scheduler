@@ -118,21 +118,23 @@ void sortProcesses(process* processes, size_t length) {
  * Return: number of processes
  */
 size_t getLengthProcesses(process* processes) {
-    size_t length = 0;
-    while ((processes + length)->pa->processNum != -1)
-        length++;
+    if (processes->pa->processNum == -1)
+        return 0;
 
-    return length;
+    return 1 + getLengthProcesses(processes + 1); // Recursively gets the next process
 }
 
-size_t getLengthQueue(process* queueHead) {
-    size_t length = 0;
-    while (queueHead != NULL) {
-        length++;
-        queueHead = queueHead->next;
-    }
+/**
+ * getLengthQueue(): returns length of queue
+ * @queue: head of the queue
+ *
+ * Return: length of queue
+ */
+size_t getLengthQueue(process* queue) {
+    if (queue == NULL)
+        return 0;
 
-    return length;
+    return 1 + getLengthQueue(queue->next);
 }
 
 /**
@@ -177,6 +179,7 @@ void printQueue(process* queueHead) {
 int getAvgRemainingTime(process* queue) {
     int avgBurstTime = 0;
     size_t length = getLengthQueue(queue);
+
     do {
         processAttr* p = queue->pa;
         avgBurstTime += p->remainingTime;
@@ -193,19 +196,20 @@ int getAvgRemainingTime(process* queue) {
  * @avgBurstTime: average to compare to
  */
 void allocateTickets(process* queue, int avgBurstTime) {
-    do {
-        processAttr* p = queue->pa;
-        // Short job if remaining burst time <= average remaining burst time
-        if (p->remainingTime <= avgBurstTime) {
-            p->tickets = SHORT_JOB_TICKETS;
-            p->shortJob = 1;
-        } else { // Else long job
-            p->tickets = LONG_JOB_TICKETS;
-            p->shortJob = 0;
-        }
+    if (queue == NULL)
+        return;
 
-        queue = queue->next; // Move to next process in queue
-    } while (queue != NULL);
+    processAttr* p = queue->pa;
+    // Short job if remaining burst time <= average remaining burst time
+    if (p->remainingTime <= avgBurstTime) {
+        p->tickets = SHORT_JOB_TICKETS;
+        p->shortJob = 1;
+    } else { // Else long job
+        p->tickets = LONG_JOB_TICKETS;
+        p->shortJob = 0;
+    }
+
+    allocateTickets(queue->next, avgBurstTime); // Recursively go to the next process in the queue
 }
 
 /**
@@ -215,15 +219,12 @@ void allocateTickets(process* queue, int avgBurstTime) {
  * Return: all tickets in the queue
  */
 int getTotalTickets(process* queue) {
-    int totalTickets = 0;
-    do {
-        processAttr* p = queue->pa;
-        totalTickets += p->tickets;
+    if (queue == NULL)
+        return 0;
 
-        queue = queue->next; // Move to next process in queue
-    } while (queue != NULL);
+    processAttr* p = queue->pa;
 
-    return totalTickets;
+    return p->tickets + getTotalTickets(queue->next);
 }
 
 process* getWinner(process* queue) {
@@ -264,6 +265,7 @@ int main(int argc, char** argv) {
 
     // Index pointer used to track when to add newly arrived processes
     process* indexPtr = processes;
+    // Queue means the process queue, which is using the linked list data structure
     process* queue = processes;
 
     // Add newly arrived processes to queue
