@@ -112,6 +112,18 @@ void sortProcesses(process* processes, size_t length) {
 }
 
 /**
+ * enqueue(): appends process to end of queue
+ * @curr: current process
+ * @prev: previous process
+ *
+ * Return: previous pointer
+ */
+process* enqueue(process* curr, process* prev) {
+    prev->next = curr;
+    return curr;
+}
+
+/**
  * getLength(): returns number of processes
  * @processes: array of processes
  *
@@ -247,6 +259,21 @@ process* getWinner(process* queue) {
     return winner;
 }
 
+/**
+ * bumpWaitTime(): increase wait time of each process that is not the winner
+ * @queue: head of queue
+ * @winner: winning process
+ */
+void bumpWaitTime(process* queue, process* winner) {
+    if (queue == NULL)
+        return;
+
+    if (queue != winner)
+        queue->pa->waitTime += 1;
+
+    bumpWaitTime(queue->next, winner);
+}
+
 int main(int argc, char** argv) {
     if (argc != 2)
         return 1;
@@ -264,19 +291,18 @@ int main(int argc, char** argv) {
     sortProcesses(processes, totalProcesses);
 
     // Index pointer used to track when to add newly arrived processes
-    process* indexPtr = processes;
+    process* indexPtr = processes + 1; // Add one because the first process is already enqueued
     // Queue means the process queue, which is using the linked list data structure
     process* queue = processes;
 
     // Add newly arrived processes to queue
     process* prev = processes;
     for (int i = 0; i < totalProcesses; i++) {
-        process* curr = (processes + i);
-        // If processes has arrived
+        process* curr = processes + i;
+        // If processes has arrived and not first
         if (i != 0 && curr->pa->arrivalTime == processes->pa->arrivalTime) {
-            prev->next = curr;
-            prev = curr;
-            indexPtr++; // Tracks last item on the queue
+            prev = enqueue(curr, prev);
+            indexPtr++; // Tracks process after the last arrived process within all processes
         }
     }
 
@@ -293,6 +319,39 @@ int main(int argc, char** argv) {
 
         // Selecting a process to run
         process* winner = getWinner(queue);
+
+        // Check every 1 time unit
+        for (int sec = 0; sec < timeSlice; sec++) {
+            winner->pa->remainingTime--;
+            timeElapsed++;
+
+            // Increase waiting time for all processes that is not selected to run
+            bumpWaitTime(queue, winner);
+
+            // Check if new process arrived
+            process* tmpPtr = indexPtr; // Temporary index pointer
+            int newProcessArrived = 0;
+            process* prev = indexPtr - 1;
+            for (int i = 0; i < getLengthProcesses(indexPtr); i++) {
+                // If new process arrived
+                processAttr* p = (indexPtr + i)->pa;
+                if (timeElapsed >= p->arrivalTime) {
+                    // Update new process waiting time
+                    p->waitTime = timeElapsed - p->arrivalTime;
+
+                    // Add arrived process to queue
+                    process* curr = indexPtr + i;
+                    prev = enqueue(curr, prev);
+
+                    // Increment index pointer reference
+                    tmpPtr++;
+                    newProcessArrived = 1;
+                }
+            }
+            indexPtr = tmpPtr;
+
+            break; // TODO: Remove
+        }
 
         break; // TODO: Remove
     }
