@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define LINE_LENGTH 512 // Max numer of bytes per line
+#define LINE_LENGTH 32 // Max numer of bytes per line
 
 // Tickets allocated based on long or short job
 #define LONG_JOB_TICKETS 1
