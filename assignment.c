@@ -274,6 +274,29 @@ void bumpWaitTime(process* queue, process* winner) {
     bumpWaitTime(queue->next, winner);
 }
 
+/**
+ * deleteProcess(): deletes process from queue
+ * @queue: address to start of the queue
+ * @p: process to remove
+ */
+void deleteProcess(process** queue, process* p) {
+    // If node is head
+    if (*queue == p) {
+        *queue = p->next;
+        return;
+    }
+
+    process* tmp = *queue;
+    do {
+        if (tmp->next == p) {
+            tmp->next = p->next;
+            return;
+        }
+
+        tmp = tmp->next;
+    } while (tmp != NULL);
+}
+
 int main(int argc, char** argv) {
     if (argc != 2)
         return 1;
@@ -350,10 +373,21 @@ int main(int argc, char** argv) {
             }
             indexPtr = tmpPtr;
 
-            break; // TODO: Remove
-        }
+            // If process finished running
+            if (winner->pa->remainingTime == 0) {
+                // Calculate exit and turn around time
+                winner->pa->exitTime = timeElapsed;
+                winner->pa->turnAroundTime = timeElapsed - winner->pa->arrivalTime;
 
-        break; // TODO: Remove
+                // Remove winning process from queue
+                deleteProcess(&queue, winner);
+                break;
+            }
+
+            // Stop if new process arrives
+            if (newProcessArrived)
+                break;
+        }
     }
 
     return 0;
