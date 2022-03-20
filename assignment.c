@@ -226,6 +226,26 @@ int getTotalTickets(process* queue) {
     return totalTickets;
 }
 
+process* getWinner(process* queue) {
+    // Select random ticket between 1 and all tickets inclusively
+    int winningTicket = rand() % getTotalTickets(queue) + 1;
+    process* winner = queue;
+    int counter = 0;
+
+    do {
+        processAttr* p = queue->pa;
+        counter += p->tickets + p->waitTime;
+        if (counter > winningTicket) {
+            winner = queue;
+            break;
+        }
+
+        queue = queue->next;
+    } while (queue != NULL);
+
+    return winner;
+}
+
 int main(int argc, char** argv) {
     if (argc != 2)
         return 1;
@@ -233,6 +253,8 @@ int main(int argc, char** argv) {
     FILE* fp = fopen(argv[1], "r");
     if (fp == NULL) // Check if file can be opened
         return 1;
+
+    srand(1234); // Seed lottery numbers
 
     process* processes = fileParse(fp);
     fclose(fp);
@@ -267,8 +289,8 @@ int main(int argc, char** argv) {
         // Allocating tickets
         allocateTickets(queue, avgBurstTime);
 
-        // Calculating max tickets
-        int ticketInSystem = getTotalTickets(queue);
+        // Selecting a process to run
+        process* winner = getWinner(queue);
 
         break; // TODO: Remove
     }
