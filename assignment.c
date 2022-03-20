@@ -8,6 +8,9 @@
 #define LONG_JOB_TICKETS 1
 #define SHORT_JOB_TICKETS 10
 
+// Seed
+#define SEED 69420
+
 typedef struct {
     int processNum;
     int arrivalTime;
@@ -312,7 +315,7 @@ int main(int argc, char** argv) {
     if (fp == NULL) // Check if file can be opened
         return 1;
 
-    srand(1234); // Seed lottery numbers
+    srand(SEED); // Seed lottery numbers
 
     process* processes = fileParse(fp);
     fclose(fp);
@@ -415,6 +418,31 @@ int main(int argc, char** argv) {
             indexPtr = tmpPtr;
         }
     }
+
+    float avgTAT = 0;
+    float avgWT = 0;
+    int maxTAT = -1;
+    int maxWT = -1;
+
+    for (int i = 0; i < totalProcesses; i++) {
+        processAttr* p = (processes + i)->pa;
+        avgTAT += p->turnAroundTime;
+        avgWT += p->waitTime;
+
+        if (p->turnAroundTime > maxTAT)
+            maxTAT = p->turnAroundTime;
+
+        if (p->waitTime > maxWT)
+            maxWT = p->waitTime;
+    }
+
+    avgTAT /= totalProcesses;
+    avgWT /= totalProcesses;
+
+    printf("Average turnaround time: %.2f\n", avgTAT);
+    printf("Average waiting time: %.2f\n", avgWT);
+    printf("Maximum turnaround time: %d\n", maxTAT);
+    printf("Maximum waitTime time: %d\n", maxWT);
 
     return 0;
 }
