@@ -317,6 +317,20 @@ void freeProcessors(process* processes, size_t length) {
     free(processes);
 }
 
+/**
+ * getTailFromQueue(): returns tail of queue
+ * @queue: pointer to head of queue
+ */
+process* getTailFromQueue(process* queue) {
+
+    process* trav = queue;
+
+    while (trav->next != NULL)
+        trav = trav->next;
+
+    return trav;
+}
+
 int main(int argc, char** argv) {
     if (argc != 2)
         return 1;
@@ -374,7 +388,7 @@ int main(int argc, char** argv) {
             // Check if new process arrived
             process* tmpPtr = indexPtr; // Temporary index pointer
             int newProcessArrived = 0;
-            process* prev = indexPtr - 1;
+            process* prev = getTailFromQueue(queue);
             for (size_t i = 0; i < getLengthProcesses(indexPtr); i++) {
                 // If new process arrived
                 processAttr* p = (indexPtr + i)->pa;
