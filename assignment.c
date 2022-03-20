@@ -237,9 +237,7 @@ int getTotalTickets(process* queue) {
     if (queue == NULL)
         return 0;
 
-    processAttr* p = queue->pa;
-
-    return p->tickets + getTotalTickets(queue->next);
+    return queue->pa->tickets + getTotalTickets(queue->next);
 }
 
 /**
@@ -340,6 +338,8 @@ int main(int argc, char** argv) {
     // Queue means the process queue, which is using the linked list data structure
     process* queue = processes;
 
+    int timeElapsed = processes->pa->arrivalTime;
+
     // Add newly arrived processes to queue
     process* prev = processes;
     for (size_t i = 0; i < totalProcesses; i++) {
@@ -350,8 +350,6 @@ int main(int argc, char** argv) {
             indexPtr++; // Tracks process after the last arrived process within all processes
         }
     }
-
-    int timeElapsed = 0;
 
     // While there are still processes to run in the queue
     while (getLengthQueue(queue) != 0) {
