@@ -238,7 +238,6 @@ int getTotalTickets(process* queue) {
         return 0;
 
     processAttr* p = queue->pa;
-    p->tickets += p->waitTime; // Calculating max tickets
 
     return p->tickets + getTotalTickets(queue->next);
 }
@@ -257,7 +256,7 @@ process* getWinner(process* queue) {
 
     do {
         processAttr* p = queue->pa;
-        counter += p->tickets + p->waitTime;
+        counter += p->tickets;
         if (counter > winningTicket) {
             winner = queue;
             break;
