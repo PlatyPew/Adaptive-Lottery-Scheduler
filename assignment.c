@@ -307,6 +307,19 @@ void deleteProcess(process** queue, process* p) {
     } while (tmp != NULL);
 }
 
+/**
+ * freeProcessors(): free all used memory
+ * @processes: array of processes
+ * @length: length of processes
+ */
+void freeProcessors(process* processes, size_t length) {
+    // Include additional memory added as a form of null terminated array
+    for (int i = 0; i < length + 1; i++) {
+        free((processes + i)->pa);
+    }
+    free(processes);
+}
+
 int main(int argc, char** argv) {
     if (argc != 2)
         return 1;
@@ -435,6 +448,8 @@ int main(int argc, char** argv) {
         if (p->waitTime > maxWT)
             maxWT = p->waitTime;
     }
+
+    freeProcessors(processes, totalProcesses);
 
     avgTAT /= totalProcesses;
     avgWT /= totalProcesses;
