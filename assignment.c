@@ -208,6 +208,24 @@ void allocateTickets(process* queue, int avgBurstTime) {
     } while (queue != NULL);
 }
 
+/**
+ * getTotalTickets(): returns all tickets in the queue
+ * @queue: head of the queue
+ *
+ * Return: all tickets in the queue
+ */
+int getTotalTickets(process* queue) {
+    int totalTickets = 0;
+    do {
+        processAttr* p = queue->pa;
+        totalTickets += p->tickets;
+
+        queue = queue->next; // Move to next process in queue
+    } while (queue != NULL);
+
+    return totalTickets;
+}
+
 int main(int argc, char** argv) {
     if (argc != 2)
         return 1;
@@ -242,15 +260,15 @@ int main(int argc, char** argv) {
 
     // While there are still processes to run in the queue
     while (getLengthQueue(queue) != 0) {
-        int timeSlice = 0;
-        int ticketInSystem = 0;
-
         // Determining average burst time
         int avgBurstTime = getAvgRemainingTime(queue);
-        timeSlice = avgBurstTime;
+        int timeSlice = avgBurstTime;
 
         // Allocating tickets
         allocateTickets(queue, avgBurstTime);
+
+        // Calculating max tickets
+        int ticketInSystem = getTotalTickets(queue);
 
         break; // TODO: Remove
     }
