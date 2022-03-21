@@ -146,7 +146,7 @@ size_t getLengthProcesses(process* processes) {
  * Return: length of queue
  */
 size_t getLengthQueue(process* queue) {
-    if (queue == NULL)
+    if (queue == NULL || queue->pa->remainingTime == 0) // Check if head is last node
         return 0;
 
     return 1 + getLengthQueue(queue->next);
@@ -365,7 +365,7 @@ int main(int argc, char** argv) {
     }
 
     // While there are still processes to run in the queue
-    while (getLengthQueue(queue) != 0) {
+    while (getLengthQueue(queue)) {
         // Determining average burst time
         int avgBurstTime = getAvgRemainingTime(queue);
         int timeSlice = avgBurstTime;
@@ -429,16 +429,23 @@ int main(int argc, char** argv) {
 
         // If there's no more processes in the queue
         if (!getLengthQueue(queue)) {
+            queue = indexPtr++; // First process is already in queue
+
+            // Update time elapsed to arrival time of new process
+            timeElapsed = queue->pa->arrivalTime;
+
+            process* prev = queue;
+
             // Check for remaining processes
-            process* prev = indexPtr - 1;
-            process* tmpPtr = indexPtr;
-            for (size_t i = 0; i < getLengthProcesses(indexPtr); i++) {
-                timeElapsed = (indexPtr + i)->pa->arrivalTime;
-                tmpPtr++;
-                prev = enqueue(indexPtr + i, prev);
-                break;
+            for (size_t i = 0; i < getLengthProcesses(queue); i++) {
+                process* curr = processes + i;
+                // If processes has arrived and not first
+                if (i != 0 && curr->pa->arrivalTime == timeElapsed) {
+                    prev = enqueue(curr, prev);
+                    indexPtr++; // Tracks process after the last arrived process within all
+                                // processes
+                }
             }
-            indexPtr = tmpPtr;
         }
     }
 
@@ -458,6 +465,8 @@ int main(int argc, char** argv) {
         if (p->waitTime > maxWT)
             maxWT = p->waitTime;
     }
+
+    printProcesses(processes, totalProcesses);
 
     freeProcessors(processes, totalProcesses);
 
