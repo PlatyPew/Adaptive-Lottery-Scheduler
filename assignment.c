@@ -76,11 +76,11 @@ process* fileParse(FILE* fp) {
             p->remainingTime = p->burstTime; // Remaining time is burst time
 
             // Setting the remaining attributes to 0
-            p->waitTime = 0;
-            p->exitTime = 0;
-            p->turnAroundTime = 0;
-            p->tickets = 0;
-            p->shortJob = 0;
+            p->waitTime = -1;
+            p->exitTime = -1;
+            p->turnAroundTime = -1;
+            p->tickets = -1;
+            p->shortJob = -1;
 
             (processes + processesCounter)->next = NULL;
 
@@ -267,21 +267,6 @@ process* getWinner(process* queue) {
 }
 
 /**
- * bumpWaitTime(): increase wait time of each process that is not the winner
- * @queue: head of queue
- * @winner: winning process
- */
-void bumpWaitTime(process* queue, process* winner) {
-    if (queue == NULL)
-        return;
-
-    if (queue != winner)
-        queue->pa->waitTime += 1;
-
-    bumpWaitTime(queue->next, winner);
-}
-
-/**
  * deleteProcess(): deletes process from queue
  * @queue: address to start of the queue
  * @p: process to remove
@@ -381,9 +366,6 @@ int main(int argc, char** argv) {
             winner->pa->remainingTime--;
             timeElapsed++;
 
-            // Increase waiting time for all processes that is not selected to run
-            bumpWaitTime(queue, winner);
-
             // Check if new process arrived
             process* tmpPtr = indexPtr; // Temporary index pointer
             int newProcessArrived = 0;
@@ -392,9 +374,6 @@ int main(int argc, char** argv) {
                 // If new process arrived
                 processAttr* p = (indexPtr + i)->pa;
                 if (timeElapsed >= p->arrivalTime) {
-                    // Update new process waiting time
-                    p->waitTime = timeElapsed - p->arrivalTime;
-
                     // Add arrived process to queue
                     prev = enqueue(indexPtr + i, prev);
 
@@ -409,7 +388,8 @@ int main(int argc, char** argv) {
             if (winner->pa->remainingTime == 0) {
                 // Calculate exit and turn around time
                 winner->pa->exitTime = timeElapsed;
-                winner->pa->turnAroundTime = timeElapsed - winner->pa->arrivalTime;
+                winner->pa->turnAroundTime = winner->pa->exitTime - winner->pa->arrivalTime;
+                winner->pa->waitTime = winner->pa->turnAroundTime - winner->pa->burstTime;
 
                 // Remove winning process from queue
                 deleteProcess(&queue, winner);
