@@ -320,15 +320,14 @@ void freeProcessors(process* processes, size_t length) {
 /**
  * getTailFromQueue(): returns tail of queue
  * @queue: pointer to head of queue
+ *
+ * Return: tail node of the queue
  */
 process* getTailFromQueue(process* queue) {
+    while (queue->next != NULL)
+        queue = queue->next;
 
-    process* trav = queue;
-
-    while (trav->next != NULL)
-        trav = trav->next;
-
-    return trav;
+    return queue;
 }
 
 int main(int argc, char** argv) {
