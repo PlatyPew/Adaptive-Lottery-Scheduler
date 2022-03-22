@@ -61,7 +61,7 @@ process* fileParse(FILE* fp) {
         line[charCounter++] = ch; // Append character to line
 
         if (ch == '\n') {
-            *(line + charCounter - 2) = '\0'; // Strip \r\n
+            *(line + charCounter) = '\0'; // Strip \r\n
             charCounter = 0;
 
             // Append to all processes
