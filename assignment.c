@@ -453,10 +453,10 @@ int main(int argc, char** argv) {
     avgTAT /= totalProcesses;
     avgWT /= totalProcesses;
 
-    printf("Average turnaround time: %.2f\n", avgTAT);
-    printf("Average waiting time: %.2f\n", avgWT);
-    printf("Maximum turnaround time: %d\n", maxTAT);
-    printf("Maximum waitTime time: %d\n", maxWT);
+    printf("average turnaround time: %.2f\n", avgTAT);
+    printf("maximum turnaround time: %d\n", maxTAT);
+    printf("average waiting time: %.2f\n", avgWT);
+    printf("maximum waitTime time: %d\n", maxWT);
 
     return 0;
 }
