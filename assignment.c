@@ -161,31 +161,11 @@ size_t getLengthQueue(process* queue) {
  * @processes: array of processes
  */
 void printProcesses(process* processes, size_t length) {
-    puts("PNum\tAT\tBT\tRT\tWT\tET\tTAT\tTickets\tShort");
-
+    puts("Process Number   Arrival Time   Burst Time   Turnaround Time   Waiting Time");
     for (size_t i = 0; i < length; i++) {
         processAttr* p = (processes + i)->pa;
-        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", p->processNum, p->arrivalTime, p->burstTime,
-               p->remainingTime, p->waitTime, p->exitTime, p->turnAroundTime, p->tickets,
-               p->shortJob);
-    }
-}
-
-/**
- * printQueue(): prints all processes in the queue
- * @queueHead: the head of the queue
- */
-void printQueue(process* queueHead) {
-    puts("PNum\tAT\tBT\tRT\tWT\tET\tTAT\tTickets\tShort");
-
-    while (queueHead != NULL) {
-        processAttr* pa = queueHead->pa;
-
-        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", pa->processNum, pa->arrivalTime,
-               pa->burstTime, pa->remainingTime, pa->waitTime, pa->exitTime, pa->turnAroundTime,
-               pa->tickets, pa->shortJob);
-
-        queueHead = queueHead->next;
+        printf("%14d   %12d   %10d   %15d   %12d\n", p->processNum, p->arrivalTime, p->burstTime,
+               p->turnAroundTime, p->waitTime);
     }
 }
 
@@ -468,7 +448,7 @@ int main(int argc, char** argv) {
     avgTAT /= totalProcesses;
     avgWT /= totalProcesses;
 
-    printf("average turnaround time: %.2f\n", avgTAT);
+    printf("\naverage turnaround time: %.2f\n", avgTAT);
     printf("maximum turnaround time: %d\n", maxTAT);
     printf("average waiting time: %.2f\n", avgWT);
     printf("maximum waitTime time: %d\n", maxWT);
