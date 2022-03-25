@@ -11,21 +11,23 @@
 // Seed
 #define SEED 69420
 
+// Attributes of a process
 typedef struct {
-    int processNum;
-    int arrivalTime;
-    int burstTime;
+    int processNum;    // Process number
+    int arrivalTime;   // Time process arrives
+    int burstTime;     // Burst time of process
     int remainingTime; // Remaining time process has left to run
 
-    int waitTime; // Time since last execution
-    int exitTime;
-    int turnAroundTime;
-    int tickets;  // Lottery tickets
-    int shortJob; // Check if job is long or short
+    int waitTime;       // Time since last execution
+    int exitTime;       // Time when program finishes
+    int turnAroundTime; // Turnaround time
+    int tickets;        // Number of lottery tickets process has
+    int shortJob;       // Check if job is long or short
 } processAttr;
 
+// A process and the next process in the queue
 typedef struct process {
-    processAttr* pa;
+    processAttr* pa; // Process attributes
     struct process* next;
 } process;
 
@@ -36,11 +38,11 @@ typedef struct process {
  * Return: the ceiling of the float
  */
 int mathCeil(float num) {
-    int n = (int)num;
+    int n = (int)num; // Floors the float
     if (n == num)
         return n;
 
-    return n + 1;
+    return n + 1; // Ceilings the float if floor(num) != num
 }
 
 /**
@@ -56,43 +58,45 @@ process* fileParse(FILE* fp) {
     // Read file until EOF
     char ch;
     int charCounter = 0;
-    while ((ch = fgetc(fp)) != EOF) {
-        char line[LINE_LENGTH];
-        line[charCounter++] = ch; // Append character to line
+    while ((ch = fgetc(fp)) != EOF) { // Get each character until EOF
+        char line[LINE_LENGTH];       // Maximum bytes read for each line
+        line[charCounter++] = ch;     // Append character to line
 
         if (ch == '\n') {
-            *(line + charCounter) = '\0'; // Strip \r\n
+            *(line + charCounter) = '\0'; // Separate by newline
             charCounter = 0;
 
             // Append to all processes
             (processes + processesCounter)->pa = (processAttr*)malloc(sizeof(processAttr));
             processAttr* p = (processes + processesCounter)->pa;
 
-            p->processNum = processesCounter;
-            // Split by space and ceiling the numbers
+            p->processNum = processesCounter; // Process counter starts at 0
+
+            // Split by space delimeter and ceiling the numbers to handle floats
             p->arrivalTime = mathCeil(atof(strtok(line, " ")));
             p->burstTime = mathCeil(atof(strtok(NULL, " ")));
 
             p->remainingTime = p->burstTime; // Remaining time is burst time
 
-            // Setting the remaining attributes to 0
+            // Setting the remaining attributes to -1
             p->waitTime = -1;
             p->exitTime = -1;
             p->turnAroundTime = -1;
             p->tickets = -1;
             p->shortJob = -1;
 
-            (processes + processesCounter)->next = NULL;
+            (processes + processesCounter)->next = NULL; // Set pointer to next item to NULL
 
             // Allocate memory for the next process
             processes = (process*)realloc(processes, sizeof(process) * (++processesCounter + 1));
         }
     }
 
+    // Creates a dummy process to use as a form of null-terminated queue
     (processes + processesCounter)->pa = (processAttr*)malloc(sizeof(processAttr));
     (processes + processesCounter)->pa->processNum = -1;
 
-    return processes;
+    return processes; // Returns an array of processes
 }
 
 /**
@@ -149,7 +153,7 @@ size_t getLengthQueue(process* queue) {
     if (queue == NULL || queue->pa->remainingTime == 0) // Check if head is last node
         return 0;
 
-    return 1 + getLengthQueue(queue->next);
+    return 1 + getLengthQueue(queue->next); // Recursively gets the next process
 }
 
 /**
@@ -195,6 +199,7 @@ int getAvgRemainingTime(process* queue) {
     int avgBurstTime = 0;
     size_t length = getLengthQueue(queue);
 
+    // Loops through all processes in the queue
     do {
         processAttr* p = queue->pa;
         avgBurstTime += p->remainingTime;
@@ -211,11 +216,12 @@ int getAvgRemainingTime(process* queue) {
  * @avgBurstTime: average to compare to
  */
 void allocateTickets(process* queue, int avgBurstTime) {
+    // Base case when end of queue
     if (queue == NULL)
         return;
 
-    processAttr* p = queue->pa;
     // Short job if remaining burst time <= average remaining burst time
+    processAttr* p = queue->pa;
     if (p->remainingTime <= avgBurstTime) {
         p->tickets = SHORT_JOB_TICKETS;
         p->shortJob = 1;
@@ -234,9 +240,11 @@ void allocateTickets(process* queue, int avgBurstTime) {
  * Return: all tickets in the queue
  */
 int getTotalTickets(process* queue) {
+    // Base case when end of queue
     if (queue == NULL)
         return 0;
 
+    // Recursively gets the tickets of next process
     return queue->pa->tickets + getTotalTickets(queue->next);
 }
 
@@ -252,11 +260,12 @@ process* getWinner(process* queue) {
     process* winner = queue;
     int counter = 0;
 
+    // Loop through all processes in queue
     do {
         processAttr* p = queue->pa;
         counter += p->tickets;
         if (counter > winningTicket) {
-            winner = queue;
+            winner = queue; // Get a random winning process
             break;
         }
 
@@ -278,6 +287,7 @@ void deleteProcess(process** queue, process* p) {
         return;
     }
 
+    // Loops through processes and deletes it
     process* tmp = *queue;
     do {
         if (tmp->next == p) {
@@ -297,9 +307,9 @@ void deleteProcess(process** queue, process* p) {
 void freeProcessors(process* processes, size_t length) {
     // Include additional memory added as a form of null terminated array
     for (size_t i = 0; i < length + 1; i++) {
-        free((processes + i)->pa);
+        free((processes + i)->pa); // Clear the process attributes
     }
-    free(processes);
+    free(processes); // Free process struct itself
 }
 
 /**
@@ -316,7 +326,7 @@ process* getTailFromQueue(process* queue) {
 }
 
 int main(int argc, char** argv) {
-    if (argc != 2)
+    if (argc != 2) // Check if there is exactly 1 argument
         return 1;
 
     FILE* fp = fopen(argv[1], "r");
@@ -325,17 +335,19 @@ int main(int argc, char** argv) {
 
     srand(SEED); // Seed lottery numbers
 
+    // Parse processes from file to array
     process* processes = fileParse(fp);
     fclose(fp);
     size_t totalProcesses = getLengthProcesses(processes);
 
-    sortProcesses(processes, totalProcesses);
+    sortProcesses(processes, totalProcesses); // Sorts processes by arrival time
 
     // Index pointer used to track when to add newly arrived processes
     process* indexPtr = processes + 1; // Add one because the first process is already enqueued
     // Queue means the process queue, which is using the linked list data structure
     process* queue = processes;
 
+    // Starts of clock to arrival time of earliest process
     int timeElapsed = processes->pa->arrivalTime;
 
     // Add newly arrived processes to queue
@@ -429,11 +441,13 @@ int main(int argc, char** argv) {
         }
     }
 
+    // Initailise info
     float avgTAT = 0;
     float avgWT = 0;
     int maxTAT = -1;
     int maxWT = -1;
 
+    // Calculate averages and max timings
     for (size_t i = 0; i < totalProcesses; i++) {
         processAttr* p = (processes + i)->pa;
         avgTAT += p->turnAroundTime;
@@ -446,10 +460,11 @@ int main(int argc, char** argv) {
             maxWT = p->waitTime;
     }
 
-    printProcesses(processes, totalProcesses);
+    printProcesses(processes, totalProcesses); // Prints information on process
 
-    freeProcessors(processes, totalProcesses);
+    freeProcessors(processes, totalProcesses); // Free memory
 
+    // Ger averages
     avgTAT /= totalProcesses;
     avgWT /= totalProcesses;
 
