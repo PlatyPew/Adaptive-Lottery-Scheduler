@@ -7,6 +7,11 @@ make
 ```
 
 ## Running program
+```sh
+./assignment <file>
+```
+
+## Cleaning program
 
 ```sh
 make clean
