@@ -96,14 +96,14 @@ while (len(q) != 0):
 
     # calculating max tickets
     for process in q:
-        tickets_in_sys += process.tickets + process.wait_time
+        tickets_in_sys += process.tickets
 
     # selecting process to run
     winning_ticket = randint(1, tickets_in_sys)
     winner = 0
     counter = 0
     for i in range(len(q)):
-        counter = counter + q[i].tickets + q[i].wait_time
+        counter = counter + q[i].tickets
         if counter > winning_ticket:
             winner = i
             break
