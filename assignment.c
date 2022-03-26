@@ -31,6 +31,22 @@ typedef struct process {
     struct process* next;
 } process;
 
+int getAvgRemainingTime(process*);
+int getTotalTickets(process*);
+int main(int, char**);
+int mathCeil(float);
+process* enqueue(process*, process*);
+process* fileParse(FILE*);
+process* getTailFromQueue(process* queue);
+process* getWinner(process*);
+size_t getLengthProcesses(process*);
+size_t getLengthQueue(process*);
+void allocateTickets(process*, int);
+void deleteProcess(process**, process*);
+void freeProcessors(process*, size_t);
+void printProcesses(process*, size_t);
+void sortProcesses(process*, size_t);
+
 /**
  * mathCeil(): returns the ceiling of a float
  * @num: the float to be ceiled
