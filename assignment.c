@@ -31,21 +31,180 @@ typedef struct process {
     struct process* next;
 } process;
 
-int getAvgRemainingTime(process*);
-int getTotalTickets(process*);
-int main(int, char**);
-int mathCeil(float);
-process* enqueue(process*, process*);
-process* fileParse(FILE*);
+int getAvgRemainingTime(process* queue);
+int getTotalTickets(process* queue);
+int mathCeil(float num);
+process* enqueue(process* curr, process* prev);
+process* fileParse(FILE* fp);
 process* getTailFromQueue(process* queue);
-process* getWinner(process*);
-size_t getLengthProcesses(process*);
-size_t getLengthQueue(process*);
-void allocateTickets(process*, int);
-void deleteProcess(process**, process*);
-void freeProcessors(process*, size_t);
-void printProcesses(process*, size_t);
-void sortProcesses(process*, size_t);
+process* getWinner(process* queue);
+size_t getLengthProcesses(process* processes);
+size_t getLengthQueue(process* queue);
+void allocateTickets(process* queue, int avgBurstTime);
+void deleteProcess(process** queue, process* p);
+void freeProcessors(process* processes, size_t length);
+void printProcesses(process* processes, size_t length);
+void sortProcesses(process* processes, size_t length);
+
+int main(int argc, char** argv) {
+    if (argc != 2) { // Check if there is exactly 1 argument
+        puts("Usage: ./assignment <input file>");
+        return 1;
+    }
+
+    FILE* fp = fopen(argv[1], "r");
+    if (fp == NULL) { // Check if file can be opened
+        printf("File %s cannot be opened!", argv[1]);
+        return 1;
+    }
+
+    srand(SEED); // Seed lottery numbers
+
+    // Parse processes from file to array
+    process* processes;
+    if (!(processes = fileParse(fp))) { // Check if there is at least 1 process
+        puts("File does not contain any processes!");
+        return 1;
+    }
+
+    fclose(fp);
+    size_t totalProcesses = getLengthProcesses(processes);
+
+    sortProcesses(processes, totalProcesses); // Sorts processes by arrival time
+
+    // Index pointer used to track when to add newly arrived processes
+    process* indexPtr = processes + 1; // Add one because the first process is already enqueued
+    // Queue means the process queue, which is using the linked list data structure
+    process* queue = processes;
+
+    // Starts of clock to arrival time of earliest process
+    int timeElapsed = processes->pa->arrivalTime;
+
+    // Add newly arrived processes to queue
+    process* prev = processes;
+    for (size_t i = 0; i < totalProcesses; i++) {
+        process* curr = processes + i;
+        // If processes has arrived and not first
+        if (i != 0 && curr->pa->arrivalTime == processes->pa->arrivalTime) {
+            prev = enqueue(curr, prev);
+            indexPtr++; // Tracks process after the last arrived process within all processes
+        }
+    }
+
+    // While there are still processes to run in the queue
+    while (getLengthQueue(queue)) {
+        // Determining average burst time
+        int avgBurstTime = getAvgRemainingTime(queue);
+        int timeSlice = avgBurstTime;
+
+        // Allocating tickets
+        allocateTickets(queue, avgBurstTime);
+
+        // Selecting a process to run
+        process* winner = getWinner(queue);
+
+        // Check every 1 time unit
+        for (int sec = 0; sec < timeSlice; sec++) {
+            winner->pa->remainingTime--;
+            timeElapsed++;
+
+            // Check if new process arrived
+            process* tmpPtr = indexPtr; // Temporary index pointer
+            int newProcessArrived = 0;
+            process* prev = getTailFromQueue(queue);
+            for (size_t i = 0; i < getLengthProcesses(indexPtr); i++) {
+                // If new process arrived
+                processAttr* p = (indexPtr + i)->pa;
+                if (timeElapsed >= p->arrivalTime) {
+                    // Add arrived process to queue
+                    prev = enqueue(indexPtr + i, prev);
+
+                    // Increment index pointer reference
+                    tmpPtr++;
+                    newProcessArrived = 1;
+                }
+            }
+            indexPtr = tmpPtr;
+
+            // If process finished running
+            if (winner->pa->remainingTime == 0) {
+                // Calculate exit and turn around time
+                winner->pa->exitTime = timeElapsed;
+                winner->pa->turnAroundTime = winner->pa->exitTime - winner->pa->arrivalTime;
+                winner->pa->waitTime = winner->pa->turnAroundTime - winner->pa->burstTime;
+
+                // Remove winning process from queue
+                deleteProcess(&queue, winner);
+                break;
+            }
+
+            // Stop if new process arrives
+            if (newProcessArrived)
+                break;
+        }
+
+        /*
+         * Guard against edge case: when all processes are completed in queue
+         * but there's still processes that have yet to arrive
+         * E.g. P1 arrives at time 1 with burst time 1 P2 arrives at time 10 with burst time 1
+         */
+
+        // If there's no more processes in the queue
+        if (!getLengthQueue(queue)) {
+            queue = indexPtr++; // First process is already in queue
+
+            // Update time elapsed to arrival time of new process
+            timeElapsed = queue->pa->arrivalTime;
+
+            process* prev = queue;
+
+            // Check for remaining processes
+            for (size_t i = 0; i < getLengthProcesses(queue); i++) {
+                process* curr = processes + i;
+                // If processes has arrived and not first
+                if (i != 0 && curr->pa->arrivalTime == timeElapsed) {
+                    prev = enqueue(curr, prev);
+                    indexPtr++; // Tracks process after the last arrived process within all
+                                // processes
+                }
+            }
+        }
+    }
+
+    // Initailise info
+    float avgTAT = 0;
+    float avgWT = 0;
+    int maxTAT = -1;
+    int maxWT = -1;
+
+    // Calculate averages and max timings
+    for (size_t i = 0; i < totalProcesses; i++) {
+        processAttr* p = (processes + i)->pa;
+        avgTAT += p->turnAroundTime;
+        avgWT += p->waitTime;
+
+        if (p->turnAroundTime > maxTAT)
+            maxTAT = p->turnAroundTime;
+
+        if (p->waitTime > maxWT)
+            maxWT = p->waitTime;
+    }
+
+    printProcesses(processes, totalProcesses); // Prints information on process
+
+    freeProcessors(processes, totalProcesses); // Free memory
+
+    // Ger averages
+    avgTAT /= totalProcesses;
+    avgWT /= totalProcesses;
+
+    printf("\naverage turnaround time: %.2f\n", avgTAT);
+    printf("maximum turnaround time: %d\n", maxTAT);
+    printf("average waiting time: %.2f\n", avgWT);
+    printf("maximum waitTime time: %d\n", maxWT);
+
+    return 0;
+}
 
 /**
  * mathCeil(): returns the ceiling of a float
@@ -325,158 +484,4 @@ process* getTailFromQueue(process* queue) {
         queue = queue->next;
 
     return queue;
-}
-
-int main(int argc, char** argv) {
-    if (argc != 2) // Check if there is exactly 1 argument
-        return 1;
-
-    FILE* fp = fopen(argv[1], "r");
-    if (fp == NULL) // Check if file can be opened
-        return 1;
-
-    srand(SEED); // Seed lottery numbers
-
-    // Parse processes from file to array
-    process* processes;
-    if (!(processes = fileParse(fp))) // Check if there is at least 1 process
-        return 1;
-
-    fclose(fp);
-    size_t totalProcesses = getLengthProcesses(processes);
-
-    sortProcesses(processes, totalProcesses); // Sorts processes by arrival time
-
-    // Index pointer used to track when to add newly arrived processes
-    process* indexPtr = processes + 1; // Add one because the first process is already enqueued
-    // Queue means the process queue, which is using the linked list data structure
-    process* queue = processes;
-
-    // Starts of clock to arrival time of earliest process
-    int timeElapsed = processes->pa->arrivalTime;
-
-    // Add newly arrived processes to queue
-    process* prev = processes;
-    for (size_t i = 0; i < totalProcesses; i++) {
-        process* curr = processes + i;
-        // If processes has arrived and not first
-        if (i != 0 && curr->pa->arrivalTime == processes->pa->arrivalTime) {
-            prev = enqueue(curr, prev);
-            indexPtr++; // Tracks process after the last arrived process within all processes
-        }
-    }
-
-    // While there are still processes to run in the queue
-    while (getLengthQueue(queue)) {
-        // Determining average burst time
-        int avgBurstTime = getAvgRemainingTime(queue);
-        int timeSlice = avgBurstTime;
-
-        // Allocating tickets
-        allocateTickets(queue, avgBurstTime);
-
-        // Selecting a process to run
-        process* winner = getWinner(queue);
-
-        // Check every 1 time unit
-        for (int sec = 0; sec < timeSlice; sec++) {
-            winner->pa->remainingTime--;
-            timeElapsed++;
-
-            // Check if new process arrived
-            process* tmpPtr = indexPtr; // Temporary index pointer
-            int newProcessArrived = 0;
-            process* prev = getTailFromQueue(queue);
-            for (size_t i = 0; i < getLengthProcesses(indexPtr); i++) {
-                // If new process arrived
-                processAttr* p = (indexPtr + i)->pa;
-                if (timeElapsed >= p->arrivalTime) {
-                    // Add arrived process to queue
-                    prev = enqueue(indexPtr + i, prev);
-
-                    // Increment index pointer reference
-                    tmpPtr++;
-                    newProcessArrived = 1;
-                }
-            }
-            indexPtr = tmpPtr;
-
-            // If process finished running
-            if (winner->pa->remainingTime == 0) {
-                // Calculate exit and turn around time
-                winner->pa->exitTime = timeElapsed;
-                winner->pa->turnAroundTime = winner->pa->exitTime - winner->pa->arrivalTime;
-                winner->pa->waitTime = winner->pa->turnAroundTime - winner->pa->burstTime;
-
-                // Remove winning process from queue
-                deleteProcess(&queue, winner);
-                break;
-            }
-
-            // Stop if new process arrives
-            if (newProcessArrived)
-                break;
-        }
-
-        /*
-         * Guard against edge case: when all processes are completed in queue
-         * but there's still processes that have yet to arrive
-         * E.g. P1 arrives at time 1 with burst time 1 P2 arrives at time 10 with burst time 1
-         */
-
-        // If there's no more processes in the queue
-        if (!getLengthQueue(queue)) {
-            queue = indexPtr++; // First process is already in queue
-
-            // Update time elapsed to arrival time of new process
-            timeElapsed = queue->pa->arrivalTime;
-
-            process* prev = queue;
-
-            // Check for remaining processes
-            for (size_t i = 0; i < getLengthProcesses(queue); i++) {
-                process* curr = processes + i;
-                // If processes has arrived and not first
-                if (i != 0 && curr->pa->arrivalTime == timeElapsed) {
-                    prev = enqueue(curr, prev);
-                    indexPtr++; // Tracks process after the last arrived process within all
-                                // processes
-                }
-            }
-        }
-    }
-
-    // Initailise info
-    float avgTAT = 0;
-    float avgWT = 0;
-    int maxTAT = -1;
-    int maxWT = -1;
-
-    // Calculate averages and max timings
-    for (size_t i = 0; i < totalProcesses; i++) {
-        processAttr* p = (processes + i)->pa;
-        avgTAT += p->turnAroundTime;
-        avgWT += p->waitTime;
-
-        if (p->turnAroundTime > maxTAT)
-            maxTAT = p->turnAroundTime;
-
-        if (p->waitTime > maxWT)
-            maxWT = p->waitTime;
-    }
-
-    printProcesses(processes, totalProcesses); // Prints information on process
-
-    freeProcessors(processes, totalProcesses); // Free memory
-
-    // Ger averages
-    avgTAT /= totalProcesses;
-    avgWT /= totalProcesses;
-
-    printf("\naverage turnaround time: %.2f\n", avgTAT);
-    printf("maximum turnaround time: %d\n", maxTAT);
-    printf("average waiting time: %.2f\n", avgWT);
-    printf("maximum waitTime time: %d\n", maxWT);
-
-    return 0;
 }
