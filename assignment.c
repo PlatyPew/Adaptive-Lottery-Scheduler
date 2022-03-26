@@ -80,6 +80,9 @@ process* fileParse(FILE* fp) {
 
         if (ch == '\n') {
             *(line + charCounter) = '\0'; // Separate by newline
+            if (strlen(line) <= 2)        // Check if file has ended at new line
+                break;
+
             charCounter = 0;
 
             // Append to all processes
@@ -111,6 +114,9 @@ process* fileParse(FILE* fp) {
     // Creates a dummy process to use as a form of null-terminated queue
     (processes + processesCounter)->pa = (processAttr*)malloc(sizeof(processAttr));
     (processes + processesCounter)->pa->processNum = -1;
+
+    if (!getLengthProcesses(processes))
+        return 0;
 
     return processes; // Returns an array of processes
 }
@@ -332,7 +338,10 @@ int main(int argc, char** argv) {
     srand(SEED); // Seed lottery numbers
 
     // Parse processes from file to array
-    process* processes = fileParse(fp);
+    process* processes;
+    if (!(processes = fileParse(fp))) // Check if there is at least 1 process
+        return 1;
+
     fclose(fp);
     size_t totalProcesses = getLengthProcesses(processes);
 
