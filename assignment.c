@@ -64,7 +64,6 @@ int main(int argc, char** argv) {
     process* processes;
     if (!(processes = fileParse(fp))) { // Check if there is at least 1 process
         fclose(fp);
-        freeProcesses(processes, 0); // Free null-terminated process in queue
         puts("File does not contain any processes!");
         return 1;
     }
@@ -276,8 +275,10 @@ process* fileParse(FILE* fp) {
     (processes + processesCounter)->pa = (processAttr*)malloc(sizeof(processAttr));
     (processes + processesCounter)->pa->processNum = -1;
 
-    if (!getLengthProcesses(processes))
+    if (!getLengthProcesses(processes)) {
+        freeProcesses(processes, 0); // Free null-terminated process in queue
         return 0;
+    }
 
     return processes; // Returns an array of processes
 }
