@@ -42,7 +42,7 @@ size_t getLengthProcesses(process* processes);
 size_t getLengthQueue(process* queue);
 void allocateTickets(process* queue, int avgBurstTime);
 void deleteProcess(process** queue, process* p);
-void freeProcessors(process* processes, size_t length);
+void freeProcesses(process* processes, size_t length);
 void printProcesses(process* processes, size_t length);
 void sortProcesses(process* processes, size_t length);
 
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 
     FILE* fp = fopen(argv[1], "r");
     if (fp == NULL) { // Check if file can be opened
-        printf("File %s cannot be opened!", argv[1]);
+        printf("File %s cannot be opened!\n", argv[1]);
         return 1;
     }
 
@@ -63,11 +63,13 @@ int main(int argc, char** argv) {
     // Parse processes from file to array
     process* processes;
     if (!(processes = fileParse(fp))) { // Check if there is at least 1 process
+        fclose(fp);
+        freeProcesses(processes, 0); // Free null-terminated process in queue
         puts("File does not contain any processes!");
         return 1;
     }
-
     fclose(fp);
+
     size_t totalProcesses = getLengthProcesses(processes);
 
     sortProcesses(processes, totalProcesses); // Sorts processes by arrival time
@@ -192,7 +194,7 @@ int main(int argc, char** argv) {
 
     printProcesses(processes, totalProcesses); // Prints information on process
 
-    freeProcessors(processes, totalProcesses); // Free memory
+    freeProcesses(processes, totalProcesses); // Free memory
 
     // Ger averages
     avgTAT /= totalProcesses;
@@ -465,7 +467,7 @@ void deleteProcess(process** queue, process* p) {
  * @processes: array of processes
  * @length: length of processes
  */
-void freeProcessors(process* processes, size_t length) {
+void freeProcesses(process* processes, size_t length) {
     // Include additional memory added as a form of null terminated array
     for (size_t i = 0; i < length + 1; i++) {
         free((processes + i)->pa); // Clear the process attributes
