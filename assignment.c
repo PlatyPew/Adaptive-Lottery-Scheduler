@@ -156,19 +156,6 @@ int main(int argc, char** argv) {
 
             // Update time elapsed to arrival time of new process
             timeElapsed = queue->pa->arrivalTime;
-
-            process* prev = queue;
-
-            // Check for remaining processes
-            for (size_t i = 0; i < getLengthProcesses(queue); i++) {
-                process* curr = processes + i;
-                // If processes has arrived and not first
-                if (i != 0 && curr->pa->arrivalTime == timeElapsed) {
-                    prev = enqueue(curr, prev);
-                    indexPtr++; // Tracks process after the last arrived process within all
-                                // processes
-                }
-            }
         }
     }
 
@@ -275,6 +262,11 @@ process* fileParse(FILE* fp) {
     (processes + processesCounter)->pa = (processAttr*)malloc(sizeof(processAttr));
     (processes + processesCounter)->pa->processNum = -1;
 
+    // Added the below to initialize values that weren't before
+    // Since many parts of the code relies on checking EOF node values
+    (processes + processesCounter)->pa->remainingTime = -1;
+    (processes + processesCounter)->next = NULL;
+
     if (!getLengthProcesses(processes)) {
         freeProcesses(processes, 0); // Free null-terminated process in queue
         return 0;
@@ -334,7 +326,8 @@ size_t getLengthProcesses(process* processes) {
  * Return: length of queue
  */
 size_t getLengthQueue(process* queue) {
-    if (queue == NULL || queue->pa->remainingTime == 0) // Check if head is last node
+
+    if (queue == NULL || queue->pa->remainingTime <= 0) // Check if head is last node
         return 0;
 
     return 1 + getLengthQueue(queue->next); // Recursively gets the next process
