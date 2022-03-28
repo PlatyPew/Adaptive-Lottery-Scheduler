@@ -156,29 +156,6 @@ int main(int argc, char** argv) {
 
             // Update time elapsed to arrival time of new process
             timeElapsed = queue->pa->arrivalTime;
-
-            /*
-            The below code seems to be not needed.
-            Once we advance the queue to be the last index indicated by -1
-            of the last EOF node, it will return to the while loop and exit.
-            
-            It was originally creating a circular loop in the enqueue()
-            where prev == curr, causing stack overflow,
-            thus causing edgecase002.txt to fail.
-            */
-
-            // process* prev = queue;
-
-            // // Check for remaining processes
-            // for (size_t i = 0; i < getLengthProcesses(queue); i++) {
-            //     process* curr = processes + i;
-            //     // If processes has arrived and not first
-            //     if (i != 0 && curr->pa->arrivalTime == timeElapsed) {
-            //         prev = enqueue(curr, prev);
-            //         indexPtr++; // Tracks process after the last arrived process within all
-            //                     // processes
-            //     }
-            // }
         }
     }
 
@@ -201,7 +178,7 @@ int main(int argc, char** argv) {
             maxWT = p->waitTime;
     }
 
-    // printProcesses(processes, totalProcesses); // Prints information on process
+    printProcesses(processes, totalProcesses); // Prints information on process
 
     freeProcesses(processes, totalProcesses); // Free memory
 
@@ -287,15 +264,7 @@ process* fileParse(FILE* fp) {
 
     // Added the below to initialize values that weren't before
     // Since many parts of the code relies on checking EOF node values
-    // This is to solve edgecase006.txt, check getLengthQueue() for more info.
-    (processes + processesCounter)->pa->arrivalTime = -1;
-    (processes + processesCounter)->pa->burstTime = -1;
     (processes + processesCounter)->pa->remainingTime = -1;
-    (processes + processesCounter)->pa->waitTime = -1;
-    (processes + processesCounter)->pa->exitTime = -1;
-    (processes + processesCounter)->pa->turnAroundTime = -1;
-    (processes + processesCounter)->pa->tickets = -1;
-    (processes + processesCounter)->pa->shortJob = -1;
     (processes + processesCounter)->next = NULL;
 
     if (!getLengthProcesses(processes)) {
@@ -358,10 +327,6 @@ size_t getLengthProcesses(process* processes) {
  */
 size_t getLengthQueue(process* queue) {
 
-    // changed checking condition to be <= 0 since EOF node is initialized to -1
-    // Edgecase006.txt was making this function 
-    // access the EOF->next uninitialized pointer (garbage value)
-    // and trying to access EOF->next->pa->remainingTime, thus causing seg fault
     if (queue == NULL || queue->pa->remainingTime <= 0) // Check if head is last node
         return 0;
 
