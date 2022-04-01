@@ -64,7 +64,6 @@ int main(int argc, char** argv) {
     process* processes;
     if (!(processes = fileParse(fp))) { // Check if there is at least 1 process
         fclose(fp);
-        puts("File does not contain any processes!");
         return 1;
     }
     fclose(fp);
@@ -225,6 +224,13 @@ process* fileParse(FILE* fp) {
         char line[LINE_LENGTH];       // Maximum bytes read for each line
         line[charCounter++] = ch;     // Append character to line
 
+        // Handle non-number characters
+        if (!(ch == 0x0a || ch == 0x0d || ch == 0x20 || ch == 0x2e || (ch >= 0x30 && ch <= 0x39))) {
+            puts("File contains not integer characters!");
+            freeProcesses(processes, processesCounter);
+            return 0;
+        }
+
         if (ch == '\n') {
             *(line + charCounter) = '\0'; // Separate by newline
             if (strlen(line) <= 2)        // Check if file has ended at new line
@@ -268,6 +274,7 @@ process* fileParse(FILE* fp) {
     (processes + processesCounter)->next = NULL;
 
     if (!getLengthProcesses(processes)) {
+        puts("File does not contain any processes!");
         freeProcesses(processes, 0); // Free null-terminated process in queue
         return 0;
     }
