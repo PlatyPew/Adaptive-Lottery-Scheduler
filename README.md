@@ -1,4 +1,4 @@
-# ICT1007-Process-Scheduler
+# Adaptive Lottery Scheduler
 
 ## Building program
 
@@ -7,8 +7,17 @@ make
 ```
 
 ## Running program
+
 ```sh
 ./assignment <file>
+```
+
+### File format
+
+```
+<arrival time> <burst time>
+<arrival time> <burst time>
+<arrival time> <burst time>
 ```
 
 ## Cleaning program
