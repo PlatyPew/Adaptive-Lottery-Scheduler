@@ -226,7 +226,7 @@ process* fileParse(FILE* fp) {
 
         // Handle non-number characters
         if (!(ch == 0x0a || ch == 0x0d || ch == 0x20 || ch == 0x2e || (ch >= 0x30 && ch <= 0x39))) {
-            puts("File contains not integer characters!");
+            puts("File contains illegal characters!");
             freeProcesses(processes, processesCounter);
             return 0;
         }
